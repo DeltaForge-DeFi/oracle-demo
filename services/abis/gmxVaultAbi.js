@@ -1,0 +1,30 @@
+module.exports = {
+    VAULT_ABI: [
+        "function whitelistedTokens(address) view returns (bool)",
+        "function tokenDecimals(address) view returns (uint256)",
+        "function stableTokens(address) view returns (bool)",
+        "function shortableTokens(address) view returns (bool)",
+        "function priceFeed() view returns (address)",
+        "function getMaxPrice(address _token) view returns (uint256)",
+        "function getMinPrice(address _token) view returns (uint256)",
+        "function poolAmounts(address) view returns (uint256)",
+        "function reservedAmounts(address) view returns (uint256)",
+        "function bufferAmounts(address) view returns (uint256)",
+        "function maxLeverage() view returns (uint256)",
+        "function liquidationFeeUsd() view returns (uint256)",
+        "function taxBasisPoints() view returns (uint256)",
+        "function mintBurnFeeBasisPoints() view returns (uint256)",
+        "function swapFeeBasisPoints() view returns (uint256)",
+        "function stableSwapFeeBasisPoints() view returns (uint256)",
+        "function marginFeeBasisPoints() view returns (uint256)",
+        "function minProfitBasisPoints(address) view returns (uint256)",
+        "function globalShortSizes(address) view returns (uint256)",
+        "function maxGlobalShortSizes(address) view returns (uint256)",
+        "function globalShortAveragePrices(address) view returns (uint256)",
+        "function cumulativeFundingRates(address) view returns (uint256)",
+        "function fundingInterval() view returns (uint256)",
+        "function lastFundingTimes(address) view returns (uint256)",
+        "function fundingRateFactor() view returns (uint256)",
+        "function stableFundingRateFactor() view returns (uint256)"
+    ]
+};

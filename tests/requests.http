@@ -1,0 +1,5 @@
+curl -X POST http://localhost:3001/calculateStrategy \
+-H "Content-Type: application/json" \
+-d '{
+  "depositAmount": 1000
+}' 
