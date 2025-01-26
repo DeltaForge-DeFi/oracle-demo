@@ -35,6 +35,8 @@ function calculate(longAmount, shortAmount, leverageLong, leverageShort, data) {
   // Начальный общий депозит (в USDC) — это вся сумма longAmount + shortAmount:
   const totalDeposit = longAmount + shortAmount;
 
+
+
   // Из getData.js
   const { borrowRate, supplyRate, liquidationThreshold } = data.aave;
   const { netRate, openFee, closeFee, swapFee } = data.gmx;
@@ -52,7 +54,7 @@ function calculate(longAmount, shortAmount, leverageLong, leverageShort, data) {
   //  liquidationThreshold - ликвидация наступает при залог = займ / liquidationThreshold (то есть мы берём с запасом в 30%)
   //  longTotalSupply - Это сумма supply которую мы получаем в общей сложности (каждый круг умножается на liquidationThreshold * 0.7)
   // -----------------------------------------------------
-  const longTotalBorrow = longAmount * (liquidationThreshold * 0.7) * (1 - (liquidationThreshold * 0.7) ** leverageLong) / (1 - (liquidationThreshold * 0.7)); //сумма геометрической прогрессии
+  const longTotalBorrow = longAmount * (liquidationThreshold / 100 * 0.7) * (1 - (liquidationThreshold / 100 * 0.7) ** leverageLong) / (1 - (liquidationThreshold / 100 * 0.7)); //сумма геометрической прогрессии
   const longTotalSupply = longAmount + longTotalBorrow
   
 
@@ -70,7 +72,7 @@ function calculate(longAmount, shortAmount, leverageLong, leverageShort, data) {
   const longBorrowYearApy = longTotalBorrow * (borrowRate / 100)
   const netAaveYearPct = longSupplyYearApy + longBorrowYearApy
   // критическая цена ETH для aave (близкая к ликвидации)
-  const aaveCriticalEthValue = longTotalBorrow / liquidationThreshold / (longTotalSupply / ethPrice) * 1.05
+  const aaveCriticalEthValue = longTotalBorrow / (liquidationThreshold / 100) / (longTotalSupply / ethPrice) * 1.05
   // aaveYearApy - доходность в % от общей суммы (totalDeposit)
   const aaveYearApy = (netAaveYearPct / totalDeposit) * 100;
 
@@ -176,54 +178,56 @@ for (let longPiece = 1; longPiece <= 1000; longPiece++) {
       // Фильтруем негативные сценарии 
       // (если хотя бы в одном сценарии доходность < 0, пропускаем)
 
-      // if (
-      //   res.totalRateScenario1 < 0 ||
-      //   res.totalRateScenario2 < -2 ||
-      //   res.totalRateScenario3 < -2
-      // ) {
-      //   continue;
-      // }
+      if (
+        res.aave.longAmount > totalUSDC * 0.75 ||
+        res.gmx.shortAmount > totalUSDC * 0.75
+      ) {
+        continue;
+      }
 
       // Если все три сценария >= 0, сохраняем результат
       results.push(res);
     }
   }
 }
-
-  console.log(results[results.length / 2])
-  // 3) Если нет ни одного варианта, где все 3 сценария >= 0:
   if (results.length === 0) {
     console.log("Не найдено ни одной стратегии без отрицательных исходов.");
     return null;
   }
 
-  // 4) Сортируем результаты по убыванию доходности в сценарии 1 (боковик)
-  results.sort((a, b) => b.totalRateScenario1 - a.totalRateScenario1);
 
-  // 5) Берём лучший вариант (первый в отсортированном массиве)
-  const best = results[0];
+  results.forEach((entry) => {
+    entry.liquidationDifference = Math.abs(entry.totalRateScenario2 - entry.totalRateScenario3);
+  });
+
+  const sortedByDifference = results.sort((a, b) => a.liquidationDifference - b.liquidationDifference);
+
+  const top100ByDifference = sortedByDifference.slice(0, 100);
+
+  const bestOption = top100ByDifference.reduce((best, current) => {
+    return current.totalRateScenario1 > best.totalRateScenario1 ? current : best;
+  }, top100ByDifference[0]);
+
 
   // 6) Формируем итоговый объект
   const finalResult = {
     aave: {
-      longAmount: best.aave.longAmount,
-      longLeverage: best.aave.longLeverage,
-      totalRate: best.aave.totalRate,
-      criticalEthValue: best.aave.criticalEthValue,
+      longAmount: bestOption.aave.longAmount,
+      longLeverage: bestOption.aave.longLeverage,
+      totalRate: bestOption.aave.totalRate,
+      criticalEthValue: bestOption.aave.criticalEthValue,
     },
     gmx: {
-      shortAmount: best.gmx.shortAmount,
-      shortLeverage: best.gmx.shortLeverage,
-      totalRate: best.gmx.totalRate,
-      criticalEthValue: best.gmx.criticalEthValue,
-      initialCollateralDeltaAmount: best.gmx.initialCollateralDeltaAmount,
-      sizeDeltaUsd: best.gmx.sizeDeltaUsd,
+      shortAmount: bestOption.gmx.shortAmount,
+      shortLeverage: bestOption.gmx.shortLeverage,
+      totalRate: bestOption.gmx.totalRate,
+      criticalEthValue: bestOption.gmx.criticalEthValue,
+      initialCollateralDeltaAmount: bestOption.gmx.initialCollateralDeltaAmount,
+      sizeDeltaUsd: bestOption.gmx.sizeDeltaUsd,
     },
     // totalRateAPY: — допустим, это лучший сценарий 1
-    totalRateAPY: best.totalRateScenario1,
+    totalRateAPY: bestOption.totalRateScenario1,
   };
-
-  console.log("Лучшая стратегия:", JSON.stringify(finalResult, null, 2));
 
   return finalResult;
 }
@@ -232,6 +236,6 @@ for (let longPiece = 1; longPiece <= 1000; longPiece++) {
 // Если запускать этот скрипт напрямую из Node:
 // ================================
 (async () => {
-  const bestStrategy = await calculateStrategy(0.3);
+  const bestStrategy = await calculateStrategy(1000);
   //  вывести в консоль 
 })();
