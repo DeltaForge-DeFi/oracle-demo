@@ -1,4 +1,4 @@
-module.exports = {
+export const AAVE_VAULT_ABIS = {
   POOL_ADDRESSES_PROVIDER_ABI: [
     "function getPool() external view returns (address)",
     "function getPriceOracle() external view returns (address)",

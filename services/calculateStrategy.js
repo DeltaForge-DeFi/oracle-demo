@@ -31,7 +31,7 @@ import { getData } from "./getDataService.js";
  *      gmx: { ... }
  *   }
  */
-function calculate(longAmount, shortAmount, leverageLong, leverageShort, data) {
+export function calculate(longAmount, shortAmount, leverageLong, leverageShort, data) {
   // Начальный общий депозит (в USDC) — это вся сумма longAmount + shortAmount:
   const totalDeposit = longAmount + shortAmount;
 

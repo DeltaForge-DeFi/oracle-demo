@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import { check } from 'express-validator';
+import validationHandler from '../middleware/validationHandler.js';
+import * as calculatorController from '../controllers/calculatorController.js';
+
 const router = express.Router();
-const calculatorController = require('../controllers/calculatorController');
-const { check } = require('express-validator');
-const validationHandler = require('../middleware/validationHandler');
 
 // Валидация для calculateStrategy
 const calculatorValidation = [
@@ -68,4 +69,4 @@ const stubValidation = [
 // Обработка маршрутов
 router.post('/calculateStrategy', stubValidation, validationHandler, calculatorController.calculateStrategy);
 
-module.exports = router; 
+export default router;

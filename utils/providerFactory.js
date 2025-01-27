@@ -1,7 +1,7 @@
-const { ethers } = require('ethers');
-const { NETWORKS } = require('../config');
+import { ethers } from 'ethers';
+import { NETWORKS } from '../config/index.js';
 
-module.exports = (network) => {
+export default (network) => {
   const networkConfig = NETWORKS[network];
   if (!networkConfig) {
     throw new Error(`Неподдерживаемая сеть: ${network}`);
