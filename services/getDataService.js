@@ -3,6 +3,8 @@
  ***************************************************/
 import { ethers } from 'ethers';  
 import AAVE_ABIS from './abis/aaveVaultAbi.js'; 
+import { getSupplyBorrowRateHistory } from './getMounthSupplyBorrowRate.js';
+import { getMonthNetRate } from './getMounthNetRate.js';
 // -------------------------------
 // Исходные константы
 // -------------------------------
@@ -47,30 +49,40 @@ export async function fetchAaveRates({
   const pool = new ethers.Contract(poolAddress, AAVE_ABIS.POOL_ABI, provider);
   const dataProvider = new ethers.Contract(dataProviderAddress, AAVE_ABIS.AAVE_DATA_PROVIDER_ABI, provider);
 
-  // “reserveData” from the Pool
+  // "reserveData" from the Pool
   const reserveData = await pool.getReserveData(assetAddress);
 
 
-  // “configuration” from the Data Provider
+  // "configuration" from the Data Provider
   const configData = await dataProvider.getReserveConfigurationData(assetAddress);
 
   // raw rates
-  const { currentLiquidityRate, currentVariableBorrowRate } = reserveData;
   const { liquidationThreshold } = configData;
 
-  // currentLiquidityRate and currentVariableBorrowRate are scaled by 1e27, so:
-  //   ethers.formatUnits(X, 27) => decimal fraction (e.g. 0.0321 for 3.21%)
-  //   multiply by 100 => percentage (e.g. 3.21)
+  const { currentLiquidityRate, currentVariableBorrowRate } = reserveData;
+
+  // Преобразуем rates из raw формата
   const supplyRate = parseFloat(ethers.formatUnits(currentLiquidityRate, 27)) * 100;
   const borrowRate = parseFloat(ethers.formatUnits(currentVariableBorrowRate, 27)) * 100;
+
+  // Используем текущие значения вместо исторических, если getSupplyBorrowRateHistory() не работает
+  const {averageSupplyRateETH = supplyRate, averageVariableBorrowRateETH = borrowRate} = 
+    await getSupplyBorrowRateHistory().catch(err => {
+      console.warn('Ошибка получения исторических данных:', err);
+      return {
+        averageSupplyRateETH: supplyRate,
+        averageVariableBorrowRateETH: borrowRate
+      };
+    });
+
 
   // liquidationThreshold is scaled by 100 (e.g., 8400 => 84%)
   // so dividing by 100 => 0.84
   const liquidationThresholdDecimal = parseFloat(liquidationThreshold.toString()) / 100;
 
   return {
-    supplyRate,               // e.g. 3.21 => means 3.21% APY
-    borrowRate,               // e.g. 1.85 => means 1.85% APY
+    averageSupplyRateETH,               // e.g. 3.21 => means 3.21% APY
+    averageVariableBorrowRateETH,               // e.g. 1.85 => means 1.85% APY
     liquidationThreshold: liquidationThresholdDecimal // e.g. 0.84 => 84%
   };
 }
@@ -150,12 +162,12 @@ async function fetchGMXNetRate() {
       : 0n;
 
     // netRatePerSecond = fundingFactor - borrowingFactor
-    const netRatePerSecondBn = fundingFactorBn - borrowingFactorShortsBn;
-
-    // Делим на 1e30 (согласно спецификации GMX Synthetics),
-    // чтобы получить "десятичную долю" в секунду (e.g. 0.0000123).
-    const netRatePerSecond = Number(netRatePerSecondBn) / 1e30;
-
+    const netRatePerSecond = await getMonthNetRate().catch(err => {
+      console.warn('Ошибка получения месячной ставки:', err);
+      // Возвращаем значение по умолчанию
+      return 0; // Используем дефолтное значение или вычисляем из текущих данных
+    })/ 365 / 24 / 3600;
+    
     // Преобразуем "долю / сек" в "% / сек" 
     const netRatePerSecondPct = netRatePerSecond * 100;
 
@@ -274,20 +286,20 @@ export async function getData() {
   GMX_SWAP_FEE = swapFee;
 
   // Получаем AAVE supplyRate, borrowRate, liquidationThreshold
-  const { supplyRate, liquidationThreshold } = await fetchAaveRates({
+  const { averageSupplyRateETH, liquidationThreshold } = await fetchAaveRates({
     poolAddressesProviderAddress: "0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb",
     assetAddress: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1", 
     providerUrl: "https://arb1.arbitrum.io/rpc"
   });
 
-  const { borrowRate } = await fetchAaveRates({
+  const { averageVariableBorrowRateETH } = await fetchAaveRates({
     poolAddressesProviderAddress: "0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb",
     assetAddress: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1", 
     providerUrl: "https://arb1.arbitrum.io/rpc"
   });
 
-  AAVE_SUPPLY_RATE = supplyRate;
-  AAVE_BORROW_RATE = -borrowRate;
+  AAVE_SUPPLY_RATE = averageSupplyRateETH;
+  AAVE_BORROW_RATE = -averageVariableBorrowRateETH;
   AAVE_LIQUIDATION_THRESHOLD = liquidationThreshold;
 
   // Формируем объект
