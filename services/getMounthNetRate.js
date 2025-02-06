@@ -25,19 +25,20 @@ export async function getMonthNetRate() {
 
     // Вычисляем среднее значение avg_long_net_rate
     const averageNetRate = last60Rows.reduce((sum, row) => {
-      if (typeof row.avg_long_net_rate !== 'number') {
+      if (typeof row.avg_short_net_rate !== 'number') {
         console.warn('Пропущена запись с некорректным значением:', row);
         return sum;
       }
-      return sum + row.avg_long_net_rate;
+      return sum + row.avg_short_net_rate;
     }, 0) / last60Rows.length;
 
-    return averageNetRate; // Возвращаем только число, а не объект
+    return -averageNetRate; // Возвращаем только число, а не объект
   } catch (error) {
     console.error('Ошибка в getMonthNetRate:', error);
     throw error; // Пробрасываем ошибку дальше
   }
 }
 
+getMonthNetRate();
 // Экспортируем функцию по умолчанию
 export default getMonthNetRate;
