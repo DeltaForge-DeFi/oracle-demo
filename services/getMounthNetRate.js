@@ -39,6 +39,5 @@ export async function getMonthNetRate() {
   }
 }
 
-getMonthNetRate();
 // Экспортируем функцию по умолчанию
 export default getMonthNetRate;
