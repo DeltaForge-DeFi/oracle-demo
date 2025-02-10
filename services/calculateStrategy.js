@@ -175,7 +175,7 @@ export function calculate(
 // ================================
 // Основная асинхронная функция расчёта
 // ================================
-export async function calculateStrategy(totalUSDC) {
+export async function calculateStrategyAlg(totalUSDC) {
   // 1) Получаем данные из getData.js
   const data = await getData();
   // 2) цикл перебора
@@ -260,13 +260,19 @@ export async function calculateStrategy(totalUSDC) {
     totalRateAPY: bestOption.totalRateScenario1,
   };
 
+  console.log("finalResult", finalResult);
+
   return finalResult;
 }
 
 // ================================
 // Если запускать этот скрипт напрямую из Node:
 // ================================
-(async () => {
-  const bestStrategy = await calculateStrategy(10);
-  //  вывести в консоль
-})();
+
+
+
+// if (require.main === module) {
+//   (async () => {
+//     const bestStrategy = await calculateStrategyAlg(10);
+//   })();
+// }

@@ -1,5 +1,5 @@
 import { getData } from "../services/getDataService.js";
-import { calculate } from "../services/calculateStrategy.js";
+import { calculateStrategyAlg } from "../services/calculateStrategy.js";
 import { logger } from "../utils/logger.js";
 
 export const calculateStrategy = async (req, res, next) => {
@@ -16,8 +16,8 @@ export const calculateStrategy = async (req, res, next) => {
       res.json({ error: "short amount cannot be less than 2.1" });
     }
 
-    const result = calculate(longAmount, shortAmount, 1, 1, data);
-    console.log("result", result);
+    const result = await calculateStrategyAlg(depositAmount);
+
     res.json(result);
   } catch (error) {
     logger.error("Error in calculatorController.calculateStrategy:", error);
