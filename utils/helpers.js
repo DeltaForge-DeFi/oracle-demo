@@ -3,7 +3,7 @@
  * @param {Object} obj - входной объект
  * @returns {Object} - объект с BigInt преобразованными в строки
  */
-exports.bigIntToString = (obj) => {
+export const bigIntToString = (obj) => {
   if (typeof obj === 'bigint') {
     return obj.toString();
   } else if (Array.isArray(obj)) {

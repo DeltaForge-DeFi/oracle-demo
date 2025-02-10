@@ -1,10 +1,10 @@
 /***************************************************
  * getData.js
  ***************************************************/
-import { ethers } from 'ethers';  
-import AAVE_ABIS from './abis/aaveVaultAbi.js'; 
+import { ethers } from 'ethers';
 import { getSupplyBorrowRateHistory } from './getMounthSupplyBorrowRate.js';
 import { getMonthNetRate } from './getMounthNetRate.js';
+import {AAVE_VAULT_ABIS} from './abis/aaveVaultAbi.js';
 // -------------------------------
 // Исходные константы
 // -------------------------------
@@ -36,7 +36,7 @@ export async function fetchAaveRates({
 
   const poolAddressesProvider = new ethers.Contract(
     poolAddressesProviderAddress,
-    AAVE_ABIS.POOL_ADDRESSES_PROVIDER_ABI,
+    AAVE_VAULT_ABIS.POOL_ADDRESSES_PROVIDER_ABI,
     provider
   );
 
@@ -46,8 +46,8 @@ export async function fetchAaveRates({
   const dataProviderAddress = await poolAddressesProvider.getPoolDataProvider();
 
   // contract objects
-  const pool = new ethers.Contract(poolAddress, AAVE_ABIS.POOL_ABI, provider);
-  const dataProvider = new ethers.Contract(dataProviderAddress, AAVE_ABIS.AAVE_DATA_PROVIDER_ABI, provider);
+  const pool = new ethers.Contract(poolAddress, AAVE_VAULT_ABIS.POOL_ABI, provider);
+  const dataProvider = new ethers.Contract(dataProviderAddress, AAVE_VAULT_ABIS.AAVE_DATA_PROVIDER_ABI, provider);
 
   // "reserveData" from the Pool
   const reserveData = await pool.getReserveData(assetAddress);
@@ -66,7 +66,7 @@ export async function fetchAaveRates({
   const borrowRate = parseFloat(ethers.formatUnits(currentVariableBorrowRate, 27)) * 100;
 
   // Используем текущие значения вместо исторических, если getSupplyBorrowRateHistory() не работает
-  const {averageSupplyRateETH = supplyRate, averageVariableBorrowRateETH = borrowRate} = 
+  const {averageSupplyRateETH = supplyRate, averageVariableBorrowRateETH = borrowRate} =
     await getSupplyBorrowRateHistory().catch(err => {
       console.warn('Ошибка получения исторических данных:', err);
       return {
@@ -109,7 +109,7 @@ async function fetchEthPrice() {
     return ethUsdPrice;
   } catch (error) {
     console.error("Error fetching ETH price:", error);
-    return 0; 
+    return 0;
   }
 }
 
@@ -167,17 +167,17 @@ async function fetchGMXNetRate() {
       // Возвращаем значение по умолчанию
       return 0; // Используем дефолтное значение или вычисляем из текущих данных
     })/ 365 / 24 / 3600;
-    
-    // Преобразуем "долю / сек" в "% / сек" 
+
+    // Преобразуем "долю / сек" в "% / сек"
     const netRatePerSecondPct = netRatePerSecond * 100;
 
     // Логгируем для проверки (не обязательно)
     {
       // 8h, 24h, 365d
-      const netRate8h  = netRatePerSecond * 3600 * 8;       
-      const netRate24h = netRatePerSecond * 3600 * 24;      
-      const netRate365d = netRatePerSecond * 3600 * 24 * 365; 
-      const netRate1h = netRatePerSecond * 3600; 
+      const netRate8h  = netRatePerSecond * 3600 * 8;
+      const netRate24h = netRatePerSecond * 3600 * 24;
+      const netRate365d = netRatePerSecond * 3600 * 24 * 365;
+      const netRate1h = netRatePerSecond * 3600;
 
       console.log("Short Positions Net Rate (GMX) [debug]:");
       console.log(` Hour:  ${(netRate1h  * 100).toFixed(5)}%`);
@@ -189,7 +189,7 @@ async function fetchGMXNetRate() {
     return netRatePerSecondPct; // Возвращаем %/сек
   } catch (error) {
     console.error("Error fetching or calculating netRate:", error);
-    return 0; 
+    return 0;
   }
 }
 
@@ -288,13 +288,13 @@ export async function getData() {
   // Получаем AAVE supplyRate, borrowRate, liquidationThreshold
   const { averageSupplyRateETH, liquidationThreshold } = await fetchAaveRates({
     poolAddressesProviderAddress: "0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb",
-    assetAddress: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1", 
+    assetAddress: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
     providerUrl: "https://arb1.arbitrum.io/rpc"
   });
 
   const { averageVariableBorrowRateETH } = await fetchAaveRates({
     poolAddressesProviderAddress: "0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb",
-    assetAddress: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1", 
+    assetAddress: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
     providerUrl: "https://arb1.arbitrum.io/rpc"
   });
 

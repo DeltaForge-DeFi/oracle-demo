@@ -1,11 +1,9 @@
-// /services/aaveService.js
-const { ethers } = require('ethers');
-const { NETWORKS } = require('../config');
-const AAVE_ABIS = require('./abis/aaveVaultAbi');
-const providerFactory = require('../utils/providerFactory');
-const { bigIntToString } = require('../utils/helpers');
+import { ethers } from 'ethers';
+import {AAVE_VAULT_ABIS} from './abis/aaveVaultAbi.js';
+import providerFactory from '../utils/providerFactory.js';
+import { bigIntToString } from '../utils/helpers.js';
 
-exports.getAaveReserveData = async ({ poolAddressesProviderAddress, assetAddress, network }) => {
+export const aaveService = async ({ poolAddressesProviderAddress, assetAddress, network }) => {
   const provider = providerFactory(network);
 
   const poolProviderAddress = ethers.getAddress(poolAddressesProviderAddress);
@@ -14,7 +12,7 @@ exports.getAaveReserveData = async ({ poolAddressesProviderAddress, assetAddress
   // Создаем контракт PoolAddressesProvider
   const poolAddressesProvider = new ethers.Contract(
     poolProviderAddress,
-    AAVE_ABIS.POOL_ADDRESSES_PROVIDER_ABI,
+    AAVE_VAULT_ABIS.POOL_ADDRESSES_PROVIDER_ABI,
     provider
   );
 
@@ -49,7 +47,6 @@ exports.getAaveReserveData = async ({ poolAddressesProviderAddress, assetAddress
   const reserveDataFormatted = bigIntToString(reserveData);
   const configDataFormatted = bigIntToString(configData);
 
-  // Расшифровываем данные актива
   const {
     configuration,
     liquidityIndex,
@@ -84,7 +81,6 @@ exports.getAaveReserveData = async ({ poolAddressesProviderAddress, assetAddress
   const reserveDecimals = Number(configData.decimals.toString());
   const reserveFactor = Number(configData.reserveFactor.toString()) / 100;
 
-  // Формируем ответ
   return {
     rawData: {
       reserveData: reserveDataFormatted,
@@ -114,5 +110,8 @@ exports.getAaveReserveData = async ({ poolAddressesProviderAddress, assetAddress
       reserveFactor,
     },
     timestamp: new Date().toISOString(),
+    reserveData: reserveDataFormatted,
+    configData: configDataFormatted,
+    assetPrice: assetPrice.toString(),
   };
 };

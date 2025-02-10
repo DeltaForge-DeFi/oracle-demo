@@ -1,4 +1,4 @@
-require("dotenv").config();
+import dotenv from 'dotenv/config';
 
 // Example addresses for v2 on Arbitrum (adjust as needed):
 const NETWORKS = {
@@ -38,7 +38,4 @@ const getNetworkConfig = (network) => {
   return config;
 };
 
-module.exports = {
-  NETWORKS,
-  getNetworkConfig,
-};
+export { NETWORKS, getNetworkConfig };
