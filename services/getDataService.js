@@ -325,7 +325,7 @@ export async function getData() {
 // ------------------------------------------
 // Если проверить скрипт напрямую из консоли Node:
 // ------------------------------------------
-getData().then((result) => {
-    console.log("\nИтоговый JSON (getData):");
-    console.log(JSON.stringify(result, null, 2));
-});
+// getData().then((result) => {
+//     console.log("\nИтоговый JSON (getData):");
+//     console.log(JSON.stringify(result, null, 2));
+// });
