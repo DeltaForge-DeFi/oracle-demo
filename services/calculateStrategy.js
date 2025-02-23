@@ -207,7 +207,8 @@ export async function calculateStrategyAlg(totalUSDC) {
 
         if (
           res.aave.longAmount > totalUSDC * 0.75 ||
-          res.gmx.shortAmount > totalUSDC * 0.75
+          res.gmx.shortAmount > totalUSDC * 0.75 ||
+          res.gmx.shortAmount <= 2
         ) {
           continue;
         }
@@ -265,14 +266,38 @@ export async function calculateStrategyAlg(totalUSDC) {
   return finalResult;
 }
 
+export async function calculateStrategyProfessional(longAmount,
+                                                    shortAmount,
+                                                    leverageLong,
+                                                    leverageShort) {
+  const data = await getData();
+
+  const res = calculate(longAmount, shortAmount, leverageLong, leverageShort, data);
+
+  return {
+    aave: {
+      longAmount,
+      longLeverage: leverageLong,
+      totalRate: res.aave.totalRate,
+      criticalEthValue: res.aave.criticalEthValue,
+    },
+    gmx: {
+      shortAmount,
+      shortLeverage: leverageShort,
+      totalRate: res.gmx.totalRate,
+      criticalEthValue: res.gmx.criticalEthValue,
+      initialCollateralDeltaAmount: res.gmx.initialCollateralDeltaAmount,
+      sizeDeltaUsd: res.gmx.sizeDeltaUsd,
+    },
+    totalRateAPY: res.totalRateScenario1
+  }
+}
+
 // ================================
 // Если запускать этот скрипт напрямую из Node:
 // ================================
-
-
-
-// if (require.main === module) {
-//   (async () => {
-//     const bestStrategy = await calculateStrategyAlg(10);
-//   })();
-// }
+(async () => {
+  const bestStrategy = await calculateStrategy(10);
+  const professionStrategy = await calculateStrategyProfessional(4, 4, 6, 3);
+  //  вывести в консоль
+})();
