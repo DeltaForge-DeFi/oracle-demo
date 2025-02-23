@@ -3,3 +3,12 @@ curl -X POST http://localhost:3001/calculateStrategy \
 -d '{
   "depositAmount": 1000
 }' 
+
+curl -X POST http://localhost:3001/calculateStrategyProfessional \
+-H "Content-Type: application/json" \
+-d '{
+  "longAmount": 4,
+  "shortAmount": 4,
+  "leverageLong": 6,
+  "leverageShort": 3
+}' 

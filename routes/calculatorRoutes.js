@@ -1,7 +1,7 @@
 import express from "express";
 import { check } from "express-validator";
 import validationHandler from "../middleware/validationHandler.js";
-import { calculateStrategy } from "../controllers/calculatorController.js";
+import { calculateStrategy, calculateStrategyProfessional } from "../controllers/calculatorController.js";
 
 const router = express.Router();
 
@@ -92,6 +92,21 @@ const validation = [
     .withMessage("Начальный депозит должен быть положительным"),
 ];
 
+const professionalValidation = [
+  check("longAmount")
+    .isFloat({ min: 1 })
+    .withMessage("Сумма лонга должна быть положительным числом"),
+  check("shortAmount")
+    .isFloat({ min: 2 })
+    .withMessage("Сумма шорта должна быть положительным числом больше 2"),
+  check("leverageLong")
+    .isFloat({ min: 1 })
+    .withMessage("Плечо лонга должно быть больше или равно 1"),
+  check("leverageShort")
+    .isFloat({ min: 1 })
+    .withMessage("Плечо шорта должно быть больше или равно 1"),
+];
+
 // Обработка маршрутов
 router.post(
   "/calculateStrategy",
@@ -100,4 +115,10 @@ router.post(
   calculateStrategy,
 );
 
+router.post(
+  "/calculateStrategyProfessional",
+  professionalValidation,
+  validationHandler,
+  calculateStrategyProfessional,
+);
 export default router;

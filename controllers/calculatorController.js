@@ -1,13 +1,11 @@
 import { getData } from "../services/getDataService.js";
-import { calculateStrategyAlg } from "../services/calculateStrategy.js";
+import { calculateStrategyAlg, calculateStrategyProfessionalAlg } from "../services/calculateStrategy.js";
 import { logger } from "../utils/logger.js";
 
-export const calculateStrategy = async (req, res, next) => {
+const calculateStrategy = async (req, res, next) => {
   try {
     const { depositAmount } = req.body;
-
-    const data = await getData();
-
+    
     // Mocked
     const longAmount = depositAmount * 0.5; //50%
     const shortAmount = depositAmount - longAmount;
@@ -23,4 +21,22 @@ export const calculateStrategy = async (req, res, next) => {
     logger.error("Error in calculatorController.calculateStrategy:", error);
     res.status(500).json({ error: error.message });
   }
+};
+
+const calculateStrategyProfessional = async (req, res, next) => {
+    try {
+      const { longAmount, shortAmount, leverageLong, leverageShort } = req.body;
+
+      const result = await calculateStrategyProfessionalAlg(longAmount, shortAmount, leverageLong, leverageShort);
+
+      res.json(result);
+    } catch (error) {
+      logger.error("Error in calculatorController.calculateStrategyProfessional:", error);
+      res.status(500).json({ error: error.message });
+    }
+};
+
+export {
+  calculateStrategy,
+  calculateStrategyProfessional
 };
