@@ -122,51 +122,14 @@ async function fetchEthPrice() {
  */
 
 async function fetchGMXNetRate() {
-  const apiUrl = "https://gmx.squids.live/gmx-synthetics-arbitrum:live/api/graphql";
-  const query = `
-    query MyQuery {
-      marketInfoById(id: "0x70d95587d40A2caf56bd97485aB3Eec10Bee6336") {
-        borrowingFactorPerSecondForShorts
-        fundingFactorPerSecond
-      }
-    }
-  `;
-
   try {
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`GraphQL fetch error: ${response.status}`);
-    }
-
-    const result = await response.json();
-    if (result.errors) {
-      console.error("GraphQL errors:", result.errors);
-      throw new Error("GraphQL query returned errors");
-    }
-
-    const marketInfo = result?.data?.marketInfoById;
-    if (!marketInfo) {
-      throw new Error("No marketInfo found for that ID");
-    }
-
-    const borrowingFactorShortsBn = marketInfo.borrowingFactorPerSecondForShorts
-      ? BigInt(marketInfo.borrowingFactorPerSecondForShorts)
-      : 0n;
-    const fundingFactorBn = marketInfo.fundingFactorPerSecond
-      ? BigInt(marketInfo.fundingFactorPerSecond)
-      : 0n;
 
     // netRatePerSecond = fundingFactor - borrowingFactor
-    const netRatePerSecond = await getMonthNetRate().catch(err => {
+    const netRatePerSecond = (await getMonthNetRate().catch(err => {
       console.warn('Ошибка получения месячной ставки:', err);
       // Возвращаем значение по умолчанию
-      return 0; // Используем дефолтное значение или вычисляем из текущих данных
-    })/ 365 / 24 / 3600;
+      return 0.2; // Используем дефолтное значение или вычисляем из текущих данных
+    })) / 365 / 24 / 3600;
 
     // Преобразуем "долю / сек" в "% / сек"
     const netRatePerSecondPct = netRatePerSecond * 100;

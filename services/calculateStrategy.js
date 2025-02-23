@@ -266,7 +266,7 @@ export async function calculateStrategyAlg(totalUSDC) {
   return finalResult;
 }
 
-export async function calculateStrategyProfessional(longAmount,
+export async function calculateStrategyProfessionalAlg(longAmount,
                                                     shortAmount,
                                                     leverageLong,
                                                     leverageShort) {
@@ -297,7 +297,11 @@ export async function calculateStrategyProfessional(longAmount,
 // Если запускать этот скрипт напрямую из Node:
 // ================================
 (async () => {
-  const bestStrategy = await calculateStrategy(10);
-  const professionStrategy = await calculateStrategyProfessional(4, 4, 6, 3);
+  // const bestStrategy = await calculateStrategyAlg(10);
+  // const professionStrategy = await calculateStrategyProfessionalAlg(4, 4, 6, 3);
+
+  // console.log(professionStrategy);
+  // console.log('test')
+  // console.log(bestStrategy);
   //  вывести в консоль
 })();
