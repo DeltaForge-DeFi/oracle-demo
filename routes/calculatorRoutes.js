@@ -107,6 +107,10 @@ const professionalValidation = [
     .withMessage("Плечо шорта должно быть больше или равно 1"),
 ];
 
+router.get('/', (req,res)=> {
+  res.json('hello')
+})
+
 // Обработка маршрутов
 router.post(
   "/calculateStrategy",
